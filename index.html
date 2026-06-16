@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cloud Mail</title>
+<style>
+:root{
+  --bg:#f5f6fa;
+  --card:#fff;
+  --border:#e5e7eb;
+  --text:#111827;
+  --sub:#6b7280;
+  --primary:#2563eb;
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Inter,system-ui,sans-serif;
+}
+body{
+  background:var(--bg);
+  height:100vh;
+  overflow:hidden;
+}
+/* 登录 */
+#loginPage{
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.login-card{
+  width:380px;
+  background:white;
+  padding:40px;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+.login-card h1{
+  margin-bottom:30px;
+  text-align:center;
+}
+.input{
+  width:100%;
+  height:48px;
+  padding:0 14px;
+  margin-bottom:12px;
+  border:1px solid #ddd;
+  border-radius:10px;
+}
+.btn{
+  height:48px;
+  width:100%;
+  border:none;
+  border-radius:10px;
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+/* 主布局 */
+#mainPage{
+  display:none;
+  height:100vh;
+  display:flex;
+  flex-direction:row;
+}
+/* 左侧导航 */
+.sidebar{
+  width:200px;
+  background:white;
+  border-right:1px solid var(--border);
+  padding:20px;
+}
+.logo{
+  font-size:22px;
+  font-weight:700;
+  margin-bottom:30px;
+}
+.menu-item{
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-bottom:6px;
+}
+.menu-item.active{
+  background:#eff6ff;
+  color:#2563eb;
+  font-weight:600;
+}
+/* 页面容器 */
+.page{
+  flex:1;
+  display:none;
+  height:100%;
+  flex-direction:column;
+}
+/* 收件箱 & 发件箱 */
+.toolbar{
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  border-bottom:1px solid var(--border);
+  background:#fff;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.toolbar button{
+  border:none;
+  background:#2563eb;
+  color:white;
+  height:36px;
+  padding:0 16px;
+  border-radius:8px;
+  cursor:pointer;
+}
+.list-view{
+  display:flex;
+  flex:1;
+  overflow:hidden;
+}
+.list-panel{
+  width:330px;
+  background:white;
+  border-right:1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.mail-item{
+  padding:16px;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+}
+.mail-item:hover{
+  background:#f9fafb;
+}
+.mail-item.active {
+  background-color: #e0f2ff; /* 浅蓝色背景 */
+  border-left: 4px solid #2563eb; /* 左侧加蓝色边 */
+}
+.sender{
+  font-weight:600;
+  margin-bottom:4px;
+}
+.subject{
+  font-size:14px;
+}
+.time{
+  font-size:12px;
+  color:#6b7280;
+  margin-top:4px;
+}
+.viewer{
+  flex:1;
+  background:white;
+  display:flex;
+  flex-direction:column;
+}
+.viewer-header{
+  padding:24px;
+  border-bottom:1px solid #eee;
+}
+.mail-title{
+  font-size:24px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.meta{
+  color:#6b7280;
+  line-height:1.8;
+}
+.content{
+  padding:24px;
+  overflow:auto;
+  /*white-space:pre-wrap;*/
+  line-height:1.8;
+}
+/* 写邮件页面 */
+.compose-card{
+  padding:40px;
+  background:white;
+  margin:20px;
+  border-radius:16px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+.email-from{
+  display:flex;
+  align-items:center;
+  margin-bottom:12px;
+}
+.email-from input{
+  flex:1;
+}
+#domainText{
+  margin-left:8px;
+  padding:12px;
+  background:#f3f4f6;
+  border-radius:8px;
+  color:#111827;
+}
+textarea{
+  flex:1;
+  margin-top:12px;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  resize:none;
+}
+.send-btn{
+  margin-top:12px;
+  height:45px;
+  width:120px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  border-radius:10px;
+  cursor:pointer;
+  align-self:flex-end;
+}
+.btn-loader {
+    margin: auto auto;
+    --size: 50px;       /* 整体大小 */
+    --thickness: 6px;   /* 圆环粗细 */
+    --angle: 120deg;     /* 弧度长度 */
+    --color: #ffffff;   /* 弧颜色 */
+
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+
+    /* 弧段 */
+    background: conic-gradient(
+        var(--color) 0deg var(--angle),
+        transparent var(--angle) 360deg
+    );
+
+    /* 挖空中间控制粗细 */
+    -webkit-mask: radial-gradient(
+        circle,
+        transparent calc(50% - var(--thickness)),
+        #000 calc(50% - var(--thickness) + 1px)
+    );
+    mask: radial-gradient(
+        circle,
+        transparent calc(50% - var(--thickness)),
+        #000 calc(50% - var(--thickness) + 1px)
+    );
+
+    animation: spin 1s linear infinite;
+}
+/* 旋转动画 */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="login-card">
+    <h1>Cloud Mail</h1>
+    <input id="username" class="input" placeholder="Username">
+    <input id="password" type="password" class="input" placeholder="Password">
+    <button class="btn" id="login-btn" onclick="login()">登錄</button>
+  </div>
+</div>
+
+<div id="mainPage">
+  <div class="sidebar">
+    <div class="logo">Cloud Mail</div>
+    <div class="menu-item active" data-page="inboxPage" onclick="switchPage('inboxPage')">📥 收件箱</div>
+    <div class="menu-item" data-page="sentPage" onclick="switchPage('sentPage')">📤 发件箱</div>
+    <div class="menu-item" data-page="composePage" onclick="switchPage('composePage')">✉️ 写邮件</div>
+    <div class="menu-item" data-page="githubPage" onclick="window.open('https://github.com/YXC-Lhy/Cloudflare-Email-Worker', '_blank');">
+    <svg aria-hidden="true" focusable="false" class="octicon octicon-mark-github" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" display="inline-block" overflow="visible" style="vertical-align:text-bottom"><path d="M12 1C5.9225 1 1 5.9225 1 12C1 16.8675 4.14875 20.9787 8.52125 22.4362C9.07125 22.5325 9.2775 22.2025 9.2775 21.9137C9.2775 21.6525 9.26375 20.7862 9.26375 19.865C6.5 20.3737 5.785 19.1912 5.565 18.5725C5.44125 18.2562 4.905 17.28 4.4375 17.0187C4.0525 16.8125 3.5025 16.3037 4.42375 16.29C5.29 16.2762 5.90875 17.0875 6.115 17.4175C7.105 19.0812 8.68625 18.6137 9.31875 18.325C9.415 17.61 9.70375 17.1287 10.02 16.8537C7.5725 16.5787 5.015 15.63 5.015 11.4225C5.015 10.2262 5.44125 9.23625 6.1425 8.46625C6.0325 8.19125 5.6475 7.06375 6.2525 5.55125C6.2525 5.55125 7.17375 5.2625 9.2775 6.67875C10.1575 6.43125 11.0925 6.3075 12.0275 6.3075C12.9625 6.3075 13.8975 6.43125 14.7775 6.67875C16.8813 5.24875 17.8025 5.55125 17.8025 5.55125C18.4075 7.06375 18.0225 8.19125 17.9125 8.46625C18.6138 9.23625 19.04 10.2125 19.04 11.4225C19.04 15.6437 16.4688 16.5787 14.0213 16.8537C14.42 17.1975 14.7638 17.8575 14.7638 18.8887C14.7638 20.36 14.75 21.5425 14.75 21.9137C14.75 22.2025 14.9563 22.5462 15.5063 22.4362C19.8513 20.9787 23 16.8537 23 12C23 5.9225 18.0775 1 12 1Z"></path></svg>
+    Github
+    </div>
+  </div>
+
+  <!-- 收件箱页面 -->
+  <div id="inboxPage" class="page">
+    <div class="toolbar">
+      <button onclick="loadInbox()" id="inbox-btn">刷新</button>
+      <span id="mailCount">共 0 封邮件</span>
+    </div>
+    <div class="list-view">
+      <div id="mailList" class="list-panel"></div>
+      <div class="viewer">
+        <div class="viewer-header"><div class="mail-title">选择邮件</div></div>
+        <div class="content">请从左侧选择邮件</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 发件箱页面 -->
+  <div id="sentPage" class="page">
+    <div class="toolbar">
+      <button onclick="loadSent()" id="outbox-btn">刷新</button>
+      <span id="sentCount">共 0 封已发送</span>
+    </div>
+    <div class="list-view">
+      <div id="sentList" class="list-panel"></div>
+      <div class="viewer">
+        <div class="viewer-header"><div class="mail-title">选择邮件</div></div>
+        <div class="content">请从左侧选择邮件</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 写邮件页面 -->
+  <div id="composePage" class="page">
+    <div class="compose-card">
+      <h2>写邮件</h2>
+      <br>
+      <div class="email-from">
+      <br>
+        <input id="from" placeholder="发件人" style="font-size: 15px;height: 40px;padding: 12px;border: 1px solid #ddd;border-radius: 10px;">
+        <span id="domainText"></span>
+      </div>
+      <input id="to" placeholder="收件人" style="font-size: 15px;height: 40px;margin-bottom: 12px;padding: 12px;border: 1px solid #ddd;border-radius: 10px;">
+      <input id="subject" placeholder="主题" style="font-size: 15px;height: 40px;padding: 12px;border: 1px solid #ddd;border-radius: 10px;">
+      <textarea placeholder="邮件正文" id="body"></textarea>
+      <button class="send-btn" onclick="sendMail()" id="send-btn">发送</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE=""; // 留空非跨域请求
+let TOKEN="";
+
+function getMailDomain(){
+  const host = location.hostname;
+  const parts = host.split(".");
+  if(parts.length>1) parts.shift(); // 去掉最高一级
+  return parts.join(".");
+}
+
+document.getElementById("domainText").innerText = "@" + getMailDomain();
+
+async function login(){
+  const username=document.getElementById("username").value;
+  const password=document.getElementById("password").value;
+  document.getElementById("login-btn").innerHTML = `<div class="btn-loader" style="--size:25px; --thickness:0.4px;"></div>`;
+  document.getElementById("login-btn").disabled=true;
+  const res=await fetch(API_BASE+"/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username,password})
+  });
+  const data=await res.json();
+  if(!data.success){ alert("登入失敗"); return; }
+  TOKEN=data.token;
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("mainPage").style.display="flex";
+  switchPage("inboxPage");
+  loadInbox();
+  loadSent();
+}
+
+function switchPage(page){
+  document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+  document.getElementById(page).style.display="flex";
+  document.querySelectorAll(".menu-item").forEach(m=>m.classList.remove("active"));
+  document.querySelector(`[data-page="${page}"]`).classList.add("active");
+}
+
+/* 收件箱 */
+async function loadInbox(){
+  document.getElementById("inbox-btn").innerHTML = `<div class="btn-loader" style="--size:25px; --thickness:0.4px;"></div>`;
+  document.getElementById("inbox-btn").disabled=true;
+  const res=await fetch(API_BASE+"/emails",{headers:{Authorization:"Bearer "+TOKEN}});
+  const data=await res.json();
+  document.getElementById("mailCount").innerText=`共 ${data.emails.length} 封邮件`;
+  const list=document.getElementById("mailList");
+  list.innerHTML="";
+  data.emails.forEach(mail=>{
+    const div=document.createElement("div");
+    div.className="mail-item";
+    div.innerHTML=`<div class="sender">${escapeHtml(mail.sender)}</div>
+                     <div class="subject">${escapeHtml(mail.subject)}</div>
+                     <div class="time">${new Date(mail.received_at).toLocaleString()}</div>`;
+    div.onclick = () => {
+      // 移除之前的高亮
+      document.querySelectorAll('.mail-item').forEach(item => {
+          item.classList.remove('active');
+      });
+      // 高亮当前点击的邮件
+      div.classList.add('active');
+      // 打开邮件内容
+      openMail(mail.id, "inbox");
+    };
+    list.appendChild(div);
+  });
+  document.getElementById("inbox-btn").innerHTML = `刷新`;
+  document.getElementById("inbox-btn").disabled=false;
+}
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+async function openMail(id, type){
+  const viewer = type==="inbox"?document.querySelector("#inboxPage .viewer"):document.querySelector("#sentPage .viewer");
+  viewer.innerHTML = `<div class="btn-loader" style="--size:60px; --thickness:0.5px; --color:#2563eb;"></div>`;
+  const url = type==="inbox"?"/email/"+id:"/sent/"+id;
+  const res=await fetch(API_BASE+url,{headers:{Authorization:"Bearer "+TOKEN}});
+  const data=await res.json();
+  const mail = data.email;
+  viewer.innerHTML=`<div class="viewer-header">
+        <div class="mail-title">${escapeHtml(mail.subject)}</div>
+        <div class="meta">发件人：${escapeHtml(mail.sender)}<br>收件人：${escapeHtml(mail.receiver)}<br>时间：${new Date(mail.received_at||mail.sent_at).toLocaleString()}</div>
+      </div>
+      <div class="content" sandbox="allow-same-origin allow-popups">${mail.body}</div>`;
+}
+
+/* 发件箱 */
+async function loadSent(){
+  document.getElementById("outbox-btn").innerHTML = `<div class="btn-loader" style="--size:25px; --thickness:0.4px;"></div>`;
+  document.getElementById("outbox-btn").disabled=true;
+  const res=await fetch(API_BASE+"/sent",{headers:{Authorization:"Bearer "+TOKEN}});
+  const data=await res.json();
+  document.getElementById("sentCount").innerText=`共 ${data.emails.length} 封已发送`;
+  const list=document.getElementById("sentList");
+  list.innerHTML="";
+  data.emails.forEach(mail=>{
+    const div=document.createElement("div");
+    div.className="mail-item";
+    div.innerHTML=`<div class="sender">${escapeHtml(mail.receiver)}</div>
+                     <div class="subject">${escapeHtml(mail.subject)}</div>
+                     <div class="time">${new Date(mail.sent_at).toLocaleString()}</div>`;
+    div.onclick=()=>openMail(mail.id, "sent");
+    list.appendChild(div);
+  });
+  document.getElementById("outbox-btn").innerHTML = `刷新`;
+  document.getElementById("outbox-btn").disabled=false;
+}
+
+/* 写邮件 */
+async function sendMail(){
+  const flom = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  const subject = document.getElementById("subject").value;
+  const body = document.getElementById("body").value;
+  document.getElementById("send-btn").innerHTML = `<div class="btn-loader" style="--size:25px; --thickness:0.4px;"></div>`;
+  document.getElementById("send-btn").disabled=true;
+  document.getElementById("from").disabled=true;
+  document.getElementById("to").disabled=true;
+  document.getElementById("subject").disabled=true;
+  document.getElementById("body").disabled=true;
+  const res = await fetch(API_BASE+"/send",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+TOKEN},
+    body:JSON.stringify({to,subject,body,flom})
+  });
+  const data=await res.json();
+  if(data.success){
+    alert("發送成功");
+    document.getElementById("to").value="";
+    document.getElementById("subject").value="";
+    document.getElementById("body").value="";
+  }else{
+    if(data.error=="Missing parameters"){
+      alert("请完整填写发件人、收件人、主题、正文！");
+    }else if(data.error=="destination address is not a verified address"){
+      alert("發送失敗，收件人邮箱未验证，请在CF完成验证或升级到付费Worker");
+    }else{
+      alert("發送失敗");
+    }
+  }
+  document.getElementById("from").disabled=false;
+  document.getElementById("to").disabled=false;
+  document.getElementById("subject").disabled=false;
+  document.getElementById("body").disabled=false;
+  document.getElementById("send-btn").innerHTML = `发送`;
+  document.getElementById("send-btn").disabled=false;
+}
+</script>
+</body>
+</html>
